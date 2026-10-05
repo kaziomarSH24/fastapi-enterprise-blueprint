@@ -6,7 +6,7 @@ from models import product
 app = FastAPI()
 
 #create tables
-Base.metadata.create_all(bind=engine)
+# Base.metadata.create_all(bind=engine) # now it's handel by Alembic
 
 #registare router
 app.include_router(products.router)

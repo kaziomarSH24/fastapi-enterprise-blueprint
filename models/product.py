@@ -8,3 +8,4 @@ class Product(Base):
     name = Column(String, index=True)
     description = Column(String, nullable=True)
     price = Column(Float)
+    stock = Column(Integer, default=0)
