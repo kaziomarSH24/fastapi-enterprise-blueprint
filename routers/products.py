@@ -1,21 +1,26 @@
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+
+from database.db import get_db
+from models.product import Product
+from schemas.product import ProductCreate
 
 
-router = APIRouter(prefix="/products", tags=["products"])
+router = APIRouter(prefix="/products", tags=["Products API"])
 
-#custom middleware
-def verify_token(token: str):
-    if token != 'secret123':
-        raise HTTPException(status_code=401, detail="Unauthorized! Invalid Token.")
-    return True
+#post route for save data to database
+@router.post("/")
+def create_product(product_data: ProductCreate, db: Session = Depends(get_db) ):
+    #create Product instance
+    new_product = Product(
+        name=product_data.name,
+        description=product_data.description,
+        price= product_data.price
+    )
 
-
-
-@router.get("/")
-def get_products():
-    return {"message": "Here is the product list!"}
-
-#middleware validation route
-@router.get("/vip-products", dependencies=[Depends(verify_token)])
-def get_vip_products():
-    return {"message": "Welcome VIP! Here are your exclusive products."}
+    #data save to database
+    db.add(new_product)
+    db.commit()
+    db.refresh(new_product)
+    
+    return {'message': 'Product created successfully!', 'data': new_product}
