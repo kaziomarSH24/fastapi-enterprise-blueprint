@@ -10,6 +10,7 @@ from database.db import Base
 
 ##IMPORT ALL MODELS HERE##
 from models.product import Product
+from models.user import User
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

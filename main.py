@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from routers import products
+from routers import products, users
 from database.db import engine, Base
 from models import product
 
@@ -10,5 +10,6 @@ app = FastAPI()
 
 #registare router
 app.include_router(products.router)
+app.include_router(users.router)
 
 
