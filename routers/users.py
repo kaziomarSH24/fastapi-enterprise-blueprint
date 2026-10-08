@@ -1,6 +1,6 @@
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.openapi.models import OAuth2
-from core.security import create_access_token, verify_password, get_current_user_email
+from core.security import create_access_token, verify_password
 from schemas.user import UserLogin, LoginResponse
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from database.db import get_db
 from models.user import User
 from schemas.user import UserCreate, UserResponse
-from core.security import get_password_hash
+from core.security import get_password_hash, get_current_user
 
 router = APIRouter(prefix="/users", tags=["Users API"])
 
@@ -68,12 +68,16 @@ def login(user_credentials: OAuth2PasswordRequestForm = Depends(), db: Session =
 
 
 # Protected Route
+# @router.get('/me', response_model=UserResponse)
+# def get_profile(db: Session = Depends(get_db), email: str = Depends(get_current_user_email)):
+#     # find user from data base to get email from middleware
+#     user = db.query(User).filter(User.email == email).first()
+
+#     if not user:
+#         raise HTTPException(status_code=404, detail="User not found")
+
+#     return user
+
 @router.get('/me', response_model=UserResponse)
-def get_profile(db: Session = Depends(get_db), email: str = Depends(get_current_user_email)):
-    # find user from data base to get email from middleware
-    user = db.query(User).filter(User.email == email).first()
-
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    return user
+def get_profile(current_user: User = Depends(get_current_user)):
+    return current_user

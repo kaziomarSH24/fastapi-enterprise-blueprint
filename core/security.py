@@ -7,6 +7,10 @@ from passlib.context import CryptContext
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError
+from sqlalchemy.orm import Session
+from database.db import get_db
+from models.user import User
+
 
 load_dotenv()
 # secret key from .env
@@ -44,22 +48,49 @@ def create_access_token(data: dict):
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/login")
 
 # middleware function
-def get_current_user_email(token: str = Depends(oauth2_scheme)):
-    credentails_exception = HTTPException(
-        status_code=401,
-        detail = "Could not validate credentials",
-        headers = {"WWW-Authenticate": "Bearer"}
-    )
+# def get_current_user_email(token: str = Depends(oauth2_scheme)):
+#     credentails_exception = HTTPException(
+#         status_code=401,
+#         detail = "Could not validate credentials",
+#         headers = {"WWW-Authenticate": "Bearer"}
+#     )
 
-    try:
-        #Decode using secret key
-        payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
-        email: str = payload.get('sub')
+#     try:
+#         #Decode using secret key
+#         payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
+#         email: str = payload.get('sub')
 
-        if email is None:
-            raise credentails_exception
+#         if email is None:
+#             raise credentails_exception
         
-        return email
+#         return email
 
+#     except JWTError:
+#         raise credentails_exception
+
+
+#Update middleware function
+def get_current_user(
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db)
+):
+    credentials_exception = HTTPException(
+        status_code=401, 
+        detail="Could not validate credentials", 
+        headers={"WWW-Authenticate":"Bearer"}
+        )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email: str = payload.get('sub')
+        if email is None:
+            raise credentials_exception
     except JWTError:
-        raise credentails_exception
+        raise credentials_exception
+    
+    #find user from database using new email
+    user = db.query(User).filter(User.email==email).first()
+
+    if user is None:
+        raise credentials_exception
+
+    return user
